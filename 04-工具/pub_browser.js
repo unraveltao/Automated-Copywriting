@@ -43,16 +43,44 @@ const SPEED = (() => {
   return Number.isFinite(v) && v > 0 ? v : 1;
 })();
 
+// —— 总时限看门狗 ——
+// 每个发布进程有一个总预算（默认 8 分钟，PUB_TIMEOUT 可改）。
+// 所有 sleep / waitFor 都会检查一次：超了就抛错退出，而不是无限等下去。
+// 解决的是这个真实场景：某个选择器失效 → 死等 15 分钟 → 浏览器被占住 → 下一个平台起不来。
+const BUDGET_MS = (Number(process.env.PUB_TIMEOUT) || 480) * 1000;
+const T0 = Date.now();
+
+function usedMs() {
+  return Date.now() - T0;
+}
+function remainingMs() {
+  return Math.max(0, BUDGET_MS - usedMs());
+}
+function checkDeadline(where) {
+  if (usedMs() > BUDGET_MS) {
+    const e = new Error(
+      `总时限 ${Math.round(BUDGET_MS / 1000)}s 已用完（卡在「${where || '未知步骤'}」）。` +
+      `可能原因：页面结构变了 / 登录态掉了 / 网络卡住。` +
+      `排查：跑对应的 probe 脚本看页面；确需放宽就设 PUB_TIMEOUT=900`
+    );
+    e.code = 'PUB_TIMEOUT';
+    e.where = where || '';
+    throw e;
+  }
+}
+
 // 统一的等待入口：所有脚本都改用它，速度只在这一处调
-async function sleep(page, ms) {
+async function sleep(page, ms, where) {
+  checkDeadline(where);
   await page.waitForTimeout(Math.round(ms * SPEED));
 }
 
 // 条件等待：轮询直到 fn 返回真值或超时，返回命中的值 / null
 // 用它替掉「先盲等 8 秒再检查」——快的时候 1 秒就过，慢的时候也不会误判
 async function waitFor(page, fn, opts = {}) {
-  const { timeout = 15000, interval = 300, arg } = opts;
-  const deadline = Date.now() + timeout * SPEED;
+  const { timeout = 15000, interval = 300, arg, where } = opts;
+  const budget = Math.min(timeout * SPEED, remainingMs());
+  const deadline = Date.now() + budget;
   let last = null;
   while (Date.now() < deadline) {
     try {
@@ -61,6 +89,7 @@ async function waitFor(page, fn, opts = {}) {
     } catch (e) { /* 页面正在跳转，下一轮再试 */ }
     await page.waitForTimeout(interval);
   }
+  checkDeadline(where);   // 没等到东西，顺便确认是不是总时限用完了
   return null;
 }
 
@@ -110,4 +139,5 @@ function shotPath(tag) {
 module.exports = {
   launch, shotPath, profilePath, ensureProfile, ROOT, PROFILE, ARCHIVE,
   sleep, waitFor, waitForText, SPEED,
+  checkDeadline, remainingMs, usedMs, BUDGET_MS,
 };

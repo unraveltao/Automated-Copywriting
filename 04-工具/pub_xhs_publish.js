@@ -393,13 +393,19 @@ async function dump(page, tag, tail = 1200) {
     // 12. 底部主按钮：开关打开后从「发布」变成「定时发布」
     //
     // 这里踩了整整一晚，把结论写死在这儿，别再重复试错：
-    //   底部那条固定栏是 <xhs-publish-btn> 自定义元素，按钮文字在它**闭合的 shadow root** 里，
-    //   所以：document.querySelectorAll 找不到、递归 shadowRoot 找不到、innerText 读出来是空、
-    //   按文字匹配「定时发布」只会命中「更多设置」里那个开关（名字一模一样，位置更靠上）。
-    //   唯一可靠的定位方式是几何：拿到宿主元素的 rect，按比例点它右半边。
-    //   截图实测：栏内「暂存离开」在左、「定时发布」在右，右按钮中心约在宿主宽度的 0.78~0.85 处。
-    const findSubmitPoint = async () => {
-      return ed.evaluate(() => {
+    //   底部固定栏是 **一个** <xhs-publish-btn> 自定义元素，它同时渲染两个按钮：
+    //     save-text="暂存离开"（左） submit-text="定时发布"（右）
+    //   它的内容在**闭合的 shadow root** 里（kids=0、shadowRoot=null），所以：
+    //     - querySelectorAll 找不到按钮本体
+    //     - 递归 shadowRoot 也穿不进去
+    //     - innerText 读出来是空字符串
+    //     - 按文字匹配「定时发布」只会命中「更多设置」里那个同名开关（位置更靠上）
+    //   实测 rect = [331, 810, 680, 90]（视口 1440x900），两个按钮并排在中间：
+    //     暂存离开 ≈ 宽度的 0.31~0.48，定时发布 ≈ 0.52~0.69
+    //   所以只能按几何点：取宿主宽度的 0.60（右侧按钮正中心），失败再试 0.55 / 0.66。
+    //   属性 submit-disabled 能直接告诉我们按钮可不可点，不用猜。
+    const findSubmitPoint = async (offset = 0.6) => {
+      return ed.evaluate((ratio) => {
         const deep = (root, out = []) => {
           for (const el of root.querySelectorAll('*')) {
             out.push(el);
@@ -413,19 +419,21 @@ async function dump(page, tag, tail = 1200) {
         };
         const norm = (s) => (s || '').replace(/\s+/g, '');
 
-        // 主策略：宿主元素 <xhs-publish-btn>，取最右边那个（右=发布，左=暂存离开）
+        // 主策略：宿主元素 <xhs-publish-btn>（一个元素里两个按钮，按比例点右边那个）
         const hosts = deep(document)
           .filter((e) => (e.tagName || '').toLowerCase() === 'xhs-publish-btn' && vis(e))
-          .map((e) => e.getBoundingClientRect())
-          .sort((a, b) => a.left - b.left);
+          .sort((a, b) => b.getBoundingClientRect().width - a.getBoundingClientRect().width);
         if (hosts.length) {
-          const h = hosts[hosts.length - 1];
+          const el = hosts[0];
+          const h = el.getBoundingClientRect();
           return {
             mode: 'host',
-            x: Math.round(h.left + h.width * 0.85),
+            x: Math.round(h.left + h.width * ratio),
             y: Math.round(h.top + h.height / 2),
             rect: [Math.round(h.left), Math.round(h.top), Math.round(h.width), Math.round(h.height)],
-            hosts: hosts.length,
+            ratio,
+            submitText: el.getAttribute('submit-text') || '',
+            disabled: el.getAttribute('submit-disabled') === 't',
           };
         }
 
@@ -446,7 +454,7 @@ async function dump(page, tag, tail = 1200) {
           y: Math.round(hit.top + hit.height / 2),
           rect: [Math.round(hit.left), Math.round(hit.top), Math.round(hit.width), Math.round(hit.height)],
         };
-      });
+      }, offset);
     };
 
     // 诊断：把视口底部那一带的元素结构全 dump 出来（弄清「定时发布」按钮到底怎么渲染的）
@@ -528,8 +536,10 @@ async function dump(page, tag, tail = 1200) {
     }
 
     let submitted = false;
-    for (let i = 0; i < 2 && !submitted; i++) {
-      const pt = await findSubmitPoint();
+    // 三个偏移都落在右侧按钮的宽度范围内（0.52~0.69），点不中就换一个，不会误点「暂存离开」
+    const offsets = [0.60, 0.55, 0.66];
+    for (let i = 0; i < offsets.length && !submitted; i++) {
+      const pt = await findSubmitPoint(offsets[i]);
       if (!pt || pt.mode === 'none') {
         const frames = ed.frames().map((f) => f.url().slice(0, 100));
         steps.push({ step: 'submit-diag', frames, pt });

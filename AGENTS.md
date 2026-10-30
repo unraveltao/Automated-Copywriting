@@ -1,5 +1,16 @@
 # AGENTS.md — 自动化执行契约
 
+> **English summary** (full contract below is in Chinese; it governs execution and wins over every other doc)
+>
+> 1. **Fail fast, never retry.** Publishing is irreversible. Any failed step → exit immediately, hand the raw error to the human.
+> 2. **Publish only when explicitly asked.** One post per day; early or late makes no difference.
+> 3. **Never hand-edit the ledger JSON.** `06-存档/_发布台账/<series>.json` is the single source of truth for what has been published.
+>
+> Single entry point: `python pub_daily.py` (after `--check` returns 0). Platform order is fixed:
+> Toutiao → WeChat → Zhihu → Xiaohongshu. Exit codes: `0` ok, `1` publish failed and stopped, `2` self-check failed and nothing ran.
+>
+> Directory names are Chinese in the working copy; `README.md` gives the English mapping.
+
 > 这份文件只回答一件事：**怎么安全地跑已经建好的流程。**
 > 写作规范看 `00｜项目规划与写作模板.md`，目录与文件清单看 `项目结构.md`，发布策略看 `03-规范/发布流程.md`。
 > 冲突时以本文件为准——它管执行，其他管内容。
@@ -307,9 +318,14 @@ prompt 里必须写死的几条（否则接手的人会自作聪明）：
 - **定时任务：尚未创建。** 按上文「落地时怎么配」建，不要改方案
 - 定时发布（提前上传、指定时刻发）：头条**当前不可用**，见上文「头条的硬限制」
 
-**统一路线已通过自检和干跑，但四平台串联尚未端到端真跑过。**
-公众号 / 知乎 / 小红书三个发布脚本此前从未经 `pub_daily.py` 调用，第一次真发时要盯完整输出。
-如果哪个平台的选择器已经失效，会在那里第一次暴露——这是预期的，按「失败时怎么判断」处理即可。
+**四平台串联已端到端真跑通过（2026-10-31 第 9 关）：头条 / 公众号 / 知乎 / 小红书 全部成功并已记账。**
+
+- 公众号的「建草稿」已自动化：`pub_wx_draft.js` 负责传封面到素材库 → 新建图文 → 标题 → 正文 → 从图片库选封面 → 保存草稿，
+  `pub_daily.py` 在发公众号前会自动调用它。**没有封面的草稿在草稿箱里是「内容不完整，无法发表」。**
+- 小红书的提交按钮在一个**闭合 shadow root** 里（文字读不到、DOM 里没有按钮节点），只能按几何点
+  `<xhs-publish-btn>` 宿主的 0.60 宽度处；0.55 / 0.66 是备用偏移。别再回去试「按文字找按钮」。
+- 每次运行结束会在 `06-存档/_报告/` 生成 HTML 报告（平台结果 / 耗时 / 错误 / 截图），终端也会打印路径。
+- 超时保护：`PUB_TIMEOUT`（默认 480 秒）既是脚本内部的总时限，也是外部强杀进程树的时限。
 
 ### 2026-10-30 事故：第 1、2 关丢了
 

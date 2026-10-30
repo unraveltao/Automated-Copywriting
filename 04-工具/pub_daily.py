@@ -32,8 +32,10 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 
 import pub_ledger
+import pub_report
 import series
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -48,7 +50,7 @@ RUNNERS = {
     "小红书": "pub_xhs_publish.js",
 }
 
-TIMEOUT = 900  # 单平台上限 15 分钟
+TIMEOUT = int(os.environ.get("PUB_TIMEOUT") or 480)
 
 
 def _find_pw():
@@ -192,19 +194,51 @@ def do_check(name, online=False, only=None):
     return {"ok": not blockers, "blockers": blockers, "warnings": warnings, "info": info}
 
 
-def run_platform(platform, num):
-    """跑一个平台的发布脚本。返回 (ok, payload, raw)。"""
-    script = RUNNERS[platform]
-    try:
-        r = subprocess.run(["node", script, str(num), "--go"], cwd=HERE,
-                           capture_output=True, text=True, encoding="utf-8",
-                           errors="replace", timeout=TIMEOUT)
-    except subprocess.TimeoutExpired:
-        return False, {"error": "超时 %d 秒未结束" % TIMEOUT}, ""
+def _kill_tree(pid):
+    """连子进程一起杀。node 起的 Chrome 不杀掉会占住浏览器档案锁，下一个平台就起不来。"""
+    if os.name == "nt":
+        subprocess.run(["taskkill", "/F", "/T", "/PID", str(pid)],
+                       capture_output=True, text=True)
+    else:
+        try:
+            os.killpg(os.getpgid(pid), 9)
+        except Exception:
+            pass
 
-    raw = ((r.stdout or "") + "\n" + (r.stderr or "")).strip()
+
+def run_script(argv, timeout=None):
+    """跑一个 node 脚本。返回 (ok, payload, raw, seconds)。"""
+    t0 = time.time()
+    flags = subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0
+    try:
+        proc = subprocess.Popen(
+            ["node"] + argv, cwd=HERE,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            text=True, encoding="utf-8", errors="replace",
+            creationflags=flags,
+        )
+    except Exception as e:
+        return False, {"error": "启动失败：%s" % e}, "", time.time() - t0
+
+    limit = timeout or TIMEOUT
+    try:
+        out, err = proc.communicate(timeout=limit)
+    except subprocess.TimeoutExpired:
+        _kill_tree(proc.pid)
+        proc.kill()
+        try:
+            proc.communicate(timeout=10)
+        except Exception:
+            pass
+        return False, {
+            "error": "超过 %d 秒未结束，已强制中断（连浏览器一起杀掉，不会留档案锁）" % limit,
+            "timeout": True,
+        }, "", time.time() - t0
+
+    seconds = time.time() - t0
+    raw = ((out or "") + "\n" + (err or "")).strip()
     payload = {}
-    for line in reversed((r.stdout or "").strip().split("\n")):
+    for line in reversed((out or "").strip().split("\n")):
         line = line.strip()
         if line.startswith("{"):
             try:
@@ -217,10 +251,15 @@ def run_platform(platform, num):
     if "ok" in payload:
         ok = bool(payload["ok"])
     else:
-        ok = r.returncode == 0
+        ok = proc.returncode == 0
         if not payload:
-            payload = {"note": "脚本未输出 JSON，按返回码判定", "returncode": r.returncode}
-    return ok, payload, raw
+            payload = {"note": "脚本未输出 JSON，按返回码判定", "returncode": proc.returncode}
+    return ok, payload, raw, seconds
+
+
+def run_platform(platform, num):
+    """跑一个平台的发布脚本。返回 (ok, payload, raw, seconds)。"""
+    return run_script([RUNNERS[platform], str(num), "--go"])
 
 
 def main():
@@ -263,6 +302,13 @@ def main():
         return 0
 
     done, failed = [], None
+    records = []
+    t_start = time.time()
+
+    def rec(name, ok, secs, error="", shot="", tail="", note=""):
+        records.append({"name": name, "ok": ok, "seconds": secs, "error": error,
+                        "shot": shot, "steps_tail": tail, "note": note})
+
     for p in todo:
         # 头条发之前强制查重（其他平台靠已校准的台账）
         if p == "今日头条":
@@ -271,22 +317,66 @@ def main():
             if dup is True:
                 print("!! 头条线上已有第 %d 关，跳过这个平台（不重复发）" % num)
                 print("   命中：%s" % (detail.get("matches") or [""])[0])
+                rec(p, None, 0, note="线上已有，跳过")
                 continue
             if dup is None:
                 failed = ("今日头条", "查重失败，无法确认线上状态：%s"
                           % (detail.get("error") or "未知"), {}, "")
+                rec(p, False, 0, error=failed[1])
                 break
             print("查重通过：头条线上没有第 %d 关" % num)
 
+        # 公众号的发布脚本只认「草稿箱里已有的草稿」，所以先自动建一份。
+        # 这一步以前是人工粘的，是四平台串联里唯一的人工断点（2026-10-31 补齐）。
+        if p == "公众号":
+            print("   建草稿：node pub_wx_draft.js %d …" % num)
+            ok_d, payload_d, raw_d, secs_d = run_script(["pub_wx_draft.js", str(num)], 420)
+            if not ok_d:
+                err_d = payload_d.get("error") or "建草稿失败"
+                failed = (p, "建草稿失败：%s" % err_d, payload_d, raw_d)
+                rec(p, False, secs_d, error="建草稿失败：%s" % err_d,
+                    shot=payload_d.get("shot") or "")
+                break
+            print("   草稿就绪（%.0f 秒）" % secs_d)
+
         print("→ 发 %s …" % p)
-        ok, payload, raw = run_platform(p, num)
+        ok, payload, raw, secs = run_platform(p, num)
+        steps = payload.get("steps") or []
+        tail = json.dumps(steps[-1], ensure_ascii=False)[:300] if steps else ""
+        rec(p, ok, secs,
+            error="" if ok else (payload.get("error") or "脚本返回失败"),
+            shot=payload.get("shot") or "", tail=tail)
         if ok:
             pub_ledger.mark(name, num, p, "已发")
             done.append(p)
-            print("   %s 成功，已记账" % p)
+            print("   %s 成功，已记账（%.0f 秒）" % (p, secs))
         else:
             failed = (p, payload.get("error") or "脚本返回失败", payload, raw)
             break
+
+    # 没轮到的平台也记上，报告里要能看出「是没发」还是「发了失败」
+    for p in todo:
+        if not any(r["name"] == p for r in records):
+            rec(p, None, 0, note="未执行")
+
+    total = time.time() - t_start
+    if failed:
+        overall = "部分失败"
+    elif done and len(done) == len(todo):
+        overall = "全部完成"
+    else:
+        overall = "未完成"
+
+    run = {
+        "开始": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(t_start)),
+        "耗时": total, "关卡": num, "合集": name,
+        "平台": records, "结果": overall,
+    }
+    report_path = None
+    try:
+        report_path = pub_report.save(run)
+    except Exception as e:
+        print("（报告生成失败：%s）" % e)
 
     print("")
     if done:
@@ -307,11 +397,15 @@ def main():
         if left_plats:
             print("   今天没发的平台：%s（明天会先补这一关）" % "、".join(left_plats))
         print("   台账里成功的平台已记「已发」，失败的仍是「待发」。")
+        if report_path:
+            print("   报告：%s" % report_path)
         return 1
 
     rest_plats = [x for x in todo if x not in done]
     print("第 %d 关：%s" % (num, "全部平台完成" if not rest_plats
                             else "还剩 %s 未发" % "、".join(rest_plats)))
+    if report_path:
+        print("报告：%s" % report_path)
     return 0
 
 

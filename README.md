@@ -1,79 +1,121 @@
-# 逻辑闯关 · 100 道经典逻辑谜题
+# AutoCopy — Automated Copywriting & Multi-Platform Publishing
 
-一个「内容 + 分发」一体化的写作项目：100 篇逻辑谜题母稿，配套封面生成、排版转换和四个平台（今日头条 / 微信公众号 / 知乎 / 小红书）的发布流水线。
+An end-to-end pipeline that turns a folder of Markdown drafts into published posts on **four Chinese platforms** — Toutiao, WeChat Official Accounts, Zhihu and Xiaohongshu — with cover generation, HTML conversion, duplicate detection, a resumable publish queue, and an HTML report for every run.
 
-不是通用框架，是一个真实在跑的项目的完整存档。写它是因为四平台各有一套反人类的编辑器，把踩过的坑固化成脚本，比每次重踩一遍便宜。
+This is not a generic framework. It is the working codebase of a real daily publishing operation (a 100-part puzzle series), kept honest: every selector, every workaround and every platform quirk in here was paid for with a failed run.
+
+> **The four platforms have no usable publishing API for individual creators.** Everything below is browser automation. That is the core constraint that shapes the whole design.
 
 ---
 
-## 目录结构
+## Why it looks like this
 
-```
-01-内容/        母稿（Markdown，100 篇）
-02-视觉/        封面与卡片图（公众号 1280×792 / 小红书 1080×1440）
-03-规范/        发布流程、排版规范
-04-工具/        全部自动化脚本（Python + Node）
-05-技能包/      写作与改写的提示词包
-06-存档/        台账、发布包、运行截图、浏览器档案（不进版本库）
-07-工具手册/    命令行速查
-AGENTS.md      自动化执行契约（改代码前先读）
-```
-
-## 四平台差异（一句话版）
-
-| 平台 | 能不能用官方接口 | 实际做法 | 硬限制 |
+| Platform | Official API | What we actually do | Hard limit |
 |---|---|---|---|
-| 今日头条 | 无 | 浏览器自动化 | **加了合集就不能定时发布**，二选一 |
-| 微信公众号 | 个人号 `draft/add` 返回 48001 | 浏览器自动化，点「发表」不是「群发」 | 需要先有草稿 |
-| 知乎 | 无 | 浏览器自动化 | — |
-| 小红书 | 无 | 浏览器自动化 + 平台自带「AI 排版」 | 无发布接口，风控最严 |
+| Toutiao | none | Playwright automation | **Adding to a collection and scheduling are mutually exclusive.** Pick one. |
+| WeChat Official Accounts | `draft/add` returns 48001 for unverified personal accounts | Playwright, clicks **Publish** (not *Mass Send*) | A draft must exist before publishing |
+| Zhihu | none | Playwright automation | — |
+| Xiaohongshu | none | Playwright + the platform's own **AI layout** | No API at all; strictest anti-bot |
 
-## 快速开始
+Because none of them can be trusted to stay still, the codebase optimises for **failing loudly and early**, not for cleverness:
+
+- One article per day. No batching, no catch-up runs.
+- **Fail → stop.** Never retry a publish. A retry can mean a duplicate post or a rate-limit flag.
+- Every platform has a hard time budget. Stuck runs are killed, browser included.
+
+## Repository layout
+
+```
+01-content/     Source drafts (Markdown) — Chinese, 100 parts
+02-visual/      Covers and card images (WeChat 1280x792, Xiaohongshu 1080x1440)
+03-specs/       Publishing rules and typography specs
+04-tools/       All automation (Python + Node/Playwright)
+05-skills/      Prompt packs for writing and rewriting
+06-archive/     Ledger, publish packages, run screenshots, reports, browser profiles (gitignored)
+07-manual/      CLI cheatsheet
+AGENTS.md       Execution contract — read this before changing any code
+```
+
+> Directory names in the working copy are still Chinese (`01-内容`, `02-视觉`, …). They are kept as-is so existing scripts and the ledger keep working; `AGENTS.md` maps them.
+
+## Quick start
 
 ```bash
-# 1. 依赖
-pip install -r 04-工具/requirements.txt      # 纯标准库为主，见文件内注释
-cd 04-工具 && npm i playwright-core          # 或用系统已有的 playwright
+# 1. Dependencies
+cd 04-tools && npm i playwright-core     # or point PLAYWRIGHT_CORE at an existing install
 
-# 2. 各平台登录一次（会弹窗，扫码）
-node pub_tt_login.js     # 今日头条
-node pub_wx_login.js     # 公众号
-node pub_zh_login.js     # 知乎
-node pub_xhs_login.js    # 小红书
+# 2. Log in once per platform (a window opens, scan the QR code)
+node pub_tt_login.js     # Toutiao
+node pub_wx_login.js     # WeChat
+node pub_zh_login.js     # Zhihu
+node pub_xhs_login.js    # Xiaohongshu
 
-# 3. 自检 → 干跑 → 真发
+# 3. Check → dry run → publish
 python pub_daily.py --check
 python pub_daily.py --dry
 python pub_daily.py
 ```
 
-登录态存在 `06-存档/_浏览器档案/<平台>/`，**这个目录含 cookie，已在 `.gitignore` 里排除，不要提交**。
+Login state lives in `06-archive/_browser-profiles/<platform>/`. **That directory contains cookies and is gitignored.** Never commit it.
 
-## 发布队列怎么走
+## The publish queue
 
-单队列、只向前对齐：今天发第 N 关 = 四个平台都发第 N 关，谁缺补谁；某平台失败当天停手，第二天自然接上（按关号推进天然幂等，不会重复发）。细节见 `AGENTS.md`。
+A single queue that only moves forward. "Today we publish part N" means *all four platforms publish part N* — whichever ones are missing get filled in.
 
-## 速度调节
+| Situation | Behaviour |
+|---|---|
+| Part N missing everywhere | Publish to all four, in order |
+| Part N partially published | Only publish the missing platforms |
+| One platform fails | Stop for the day. Successful platforms are already recorded; tomorrow resumes at the same part |
+| Part number below the start marker | Never touched by automation — it is a human backfill item |
 
-所有固定等待统一走 `04-工具/pub_browser.js` 的 `sleep()`，由一个环境变量缩放：
+Order is fixed: **Toutiao → WeChat → Zhihu → Xiaohongshu.** Most stable first, strictest anti-bot last.
+
+Because the queue advances by part number, re-running is naturally idempotent — it fills gaps, never duplicates.
+
+## Tuning speed and time limits
+
+All waits funnel through `04-tools/pub_browser.js`, so behaviour is controlled by two environment variables:
 
 ```bash
-PUB_SPEED=1    # 默认，保守
-PUB_SPEED=0.6  # 本机网络好时更快
-PUB_SPEED=2    # 平台卡顿时更稳
+PUB_SPEED=1      # default. 0.6 = faster, 2 = more tolerant of a slow network
+PUB_TIMEOUT=480  # per-platform hard limit in seconds (default 8 minutes)
 ```
 
-## 已知限制
+`PUB_TIMEOUT` is enforced twice, on purpose:
 
-- **头条**：「加入合集」和「定时发布」互斥。要合集就只能立即发。
-- **公众号**：发布脚本假设草稿已存在（标题 + 正文 + 封面），建草稿这一步目前是人工的。
-- **小红书**：登录态不跨进程，扫码和发布必须在同一个进程里跑完。
-- 四个平台都没有官方发布接口，全部依赖浏览器自动化。**平台改版会让选择器失效**，这是这类方案的固有成本。
+1. **Inside** each Node script — `sleep()` and `waitFor()` check a deadline and throw `PUB_TIMEOUT` with the step name where it got stuck.
+2. **Outside** in `pub_daily.py` — if the script still doesn't exit, the whole process tree is killed (`taskkill /T`), Chrome included. Orphaned Chrome is what locks the browser profile and blocks the next platform.
 
-## 风险提示
+## Run reports
 
-浏览器自动化发布可能触发平台风控。本项目的策略是：一天一篇、失败不重试、单平台串行。请自行评估账号风险，不要用于批量灌水。
+Every run writes a self-contained HTML report:
 
-## 许可
+```
+06-archive/_reports/2026-10-31_013619_第9关.html   # this run
+06-archive/_reports/index.html                     # history, newest first
+06-archive/_reports/last.json                      # raw data of the last run
+```
 
-代码部分 MIT。`01-内容/` 里的文章为原创，转载请联系作者。
+Open the file directly in a browser — no server needed. Each report shows per-platform status, elapsed time, the exact error, the last automation step, and thumbnails of the screenshots.
+
+Regenerate or open the latest one:
+
+```bash
+python pub_report.py --open
+```
+
+## Known limitations
+
+- **Toutiao**: collection membership and scheduling are mutually exclusive. Collections win — a series without a collection entry has no navigation.
+- **WeChat**: the cover picker has no local-file option — images must go through the media library first. `pub_wx_draft.js` handles the whole chain (upload cover → new article → title → body → pick cover → save draft) and is called automatically by `pub_daily.py`. A draft without a cover is marked *incomplete* by WeChat and cannot be published.
+- **Xiaohongshu**: login state does not survive process exit — scanning the QR code and publishing must happen in the same process. Its footer buttons live in a **closed shadow root** (text is unreadable, no DOM node for the button), so the submit button is located geometrically inside the `<xhs-publish-btn>` host element.
+- All four platforms break whenever they ship a redesign. Selectors *will* rot. That is the standing cost of this approach.
+
+## Risk notice
+
+Browser automation for publishing can trigger platform anti-bot systems. This project's posture is deliberately conservative: one post per day, serial execution, no retries. Evaluate the risk to your own account before running it. It is not built for bulk posting.
+
+## License
+
+Code: MIT. The articles in `01-content/` are original work — contact the author before reusing them.

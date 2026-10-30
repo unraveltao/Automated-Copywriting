@@ -1,0 +1,72 @@
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">上一关看的是"数据怎么混"。这一关看更狠的一件事：有些数据根本不在你手上，因为它们已经消失了。</p>
+<blockquote style="margin:0 0 16px;padding:8px 16px;font-size:15px;line-height:1.8;color:#646464;border-left:3px solid #D3D3D3;"><p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">本关不需要前置知识。这一关会改变你看"成功案例"的方式。</p></blockquote>
+<hr style="margin:28px 0;border:none;border-top:1px solid #E5E5E5;">
+<h2 style="margin:28px 0 14px;font-size:19px;line-height:1.5;font-weight:bold;color:#1A1A1A;">规则设定</h2>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">二战中期，盟军的飞机损失很大。军方请了一批专家，研究该怎么加固飞机。</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">他们统计了返航飞机上的弹孔分布，画出一张图：</p>
+<pre style="margin:0 0 16px;padding:14px 16px;background:#F6F6F6;border-radius:4px;font-size:13px;line-height:1.7;overflow-x:auto;white-space:pre;font-family:Menlo,Consolas,monospace;">        机翼 ████████████  (弹孔最多)
+        机身 ██████████
+        尾部 ███████
+        引擎 ██           (弹孔最少)</pre>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">结论看起来很明显：机翼和机身弹孔最多，应该加固那里。</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">军方几乎就要照这个结论去做了。</p>
+<hr style="margin:28px 0;border:none;border-top:1px solid #E5E5E5;">
+<h2 style="margin:28px 0 14px;font-size:19px;line-height:1.5;font-weight:bold;color:#1A1A1A;">题一 · 这个结论错在哪？</h2>
+<h3 style="margin:22px 0 12px;font-size:17px;line-height:1.5;font-weight:bold;color:#1A1A1A;">题目</h3>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">数据是真的，统计也没错。返航的飞机上，机翼弹孔确实最多。</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">问："加固弹孔最多的地方"这个结论，错在哪？</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">（提示：这批数据是从哪儿来的？）</p>
+<h3 style="margin:22px 0 12px;font-size:17px;line-height:1.5;font-weight:bold;color:#1A1A1A;">答案</h3>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;"><strong style="font-weight:bold;">错在：这批数据只包含"飞回来了的飞机"。</strong></p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">那些被击落的飞机，一架都没进样本。</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">现在想一个问题：一架飞机被击中哪里，才会回不来？</p>
+<ul style="margin:0 0 16px;padding-left:24px;"><li style="margin:6px 0;font-size:16px;line-height:1.8;color:#1A1A1A;">打中机翼 → 很多飞机还是飞回来了（所以机翼上弹孔多）。</li><li style="margin:6px 0;font-size:16px;line-height:1.8;color:#1A1A1A;">打中引擎 → 飞不回来了（所以引擎上几乎看不到弹孔）。</li></ul>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;"><strong style="font-weight:bold;">"弹孔少"不是因为那里不容易被打中，是因为被打中的那些根本没回来。</strong></p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">所以正确结论正好反过来：</p>
+<blockquote style="margin:0 0 16px;padding:8px 16px;font-size:15px;line-height:1.8;color:#646464;border-left:3px solid #D3D3D3;"><p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">该加固的，是弹孔最少的地方——引擎、油箱、驾驶舱。</p></blockquote>
+<hr style="margin:28px 0;border:none;border-top:1px solid #E5E5E5;">
+<h3 style="margin:22px 0 12px;font-size:17px;line-height:1.5;font-weight:bold;color:#1A1A1A;">提出这个结论的人</h3>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">统计学家亚伯拉罕·沃德（Abraham Wald）。他做的事很简单，只是问了一句别人没问的话：</p>
+<blockquote style="margin:0 0 16px;padding:8px 16px;font-size:15px;line-height:1.8;color:#646464;border-left:3px solid #D3D3D3;"><p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">"这些弹孔，为什么没出现在引擎上？"</p></blockquote>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">答案不是"因为引擎不容易中弹"，而是"因为中弹的引擎不在这里"。</p>
+<hr style="margin:28px 0;border:none;border-top:1px solid #E5E5E5;">
+<h2 style="margin:28px 0 14px;font-size:19px;line-height:1.5;font-weight:bold;color:#1A1A1A;">题二 · 那怎么找到"没回来的"？</h2>
+<h3 style="margin:22px 0 12px;font-size:17px;line-height:1.5;font-weight:bold;color:#1A1A1A;">题目</h3>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">这个道理听懂很容易，用起来很难——因为你永远不知道少了谁。</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">问：有什么办法，能让你看见那些"没回来"的？</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">（这题是这一关的重点。给三个可操作的动作。）</p>
+<h3 style="margin:22px 0 12px;font-size:17px;line-height:1.5;font-weight:bold;color:#1A1A1A;">答案</h3>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;"><strong style="font-weight:bold;">三个动作，从易到难。</strong></p>
+<hr style="margin:28px 0;border:none;border-top:1px solid #E5E5E5;">
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;"><strong style="font-weight:bold;">动作一：</strong>问"谁不在这个名单里"。</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">拿到任何一份样本，先别分析，先问：这份名单是怎么产生的？谁被排除在外了？</p>
+<ul style="margin:0 0 16px;padding-left:24px;"><li style="margin:6px 0;font-size:16px;line-height:1.8;color:#1A1A1A;">"我们访谈了 100 位成功创业者" → 那 1000 位失败的呢？</li><li style="margin:6px 0;font-size:16px;line-height:1.8;color:#1A1A1A;">"我们调研了 500 位满意用户" → 不满意的那些，为什么没来填问卷？</li><li style="margin:6px 0;font-size:16px;line-height:1.8;color:#1A1A1A;">"公司十年以上员工的经验分享" → 那些走了的人，为什么走？</li></ul>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;"><strong style="font-weight:bold;">名单的边界，就是结论的边界。</strong></p>
+<hr style="margin:28px 0;border:none;border-top:1px solid #E5E5E5;">
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;"><strong style="font-weight:bold;">动作二：</strong>找"消失的记录"。</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">有些样本不是没被收集，是被删掉了。</p>
+<ul style="margin:0 0 16px;padding-left:24px;"><li style="margin:6px 0;font-size:16px;line-height:1.8;color:#1A1A1A;">电商评价：平台会折叠差评，你看到的 4.9 分是筛选后的结果。</li><li style="margin:6px 0;font-size:16px;line-height:1.8;color:#1A1A1A;">招聘简历：你只看到投进来的，看不到那些看了 JD 就没投的人——而他们可能更合适。</li><li style="margin:6px 0;font-size:16px;line-height:1.8;color:#1A1A1A;">医疗数据：只统计"住院病人"的研究，天然排除了"病重到没来得及住院"和"轻到不用住院"的人。</li></ul>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">遇到"数据缺失"，别急着用剩下的部分补，先问缺的那部分长什么样。</p>
+<hr style="margin:28px 0;border:none;border-top:1px solid #E5E5E5;">
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;"><strong style="font-weight:bold;">动作三：</strong>反着想——"如果它失败了，会留下什么痕迹"。</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">这是最有力的一招。</p>
+<blockquote style="margin:0 0 16px;padding:8px 16px;font-size:15px;line-height:1.8;color:#646464;border-left:3px solid #D3D3D3;"><p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">一个说法要成立，它的失败案例应该长什么样？如果连一个都找不到，那说明你看的地方不对。</p></blockquote>
+<ul style="margin:0 0 16px;padding-left:24px;"><li style="margin:6px 0;font-size:16px;line-height:1.8;color:#1A1A1A;">"读 MBA 能让人薪资翻倍" → 那些读了 MBA 但没翻倍的人，在哪儿？</li><li style="margin:6px 0;font-size:16px;line-height:1.8;color:#1A1A1A;">"这个学区房让孩子考上好学校" → 那些买了学区房但没考上的家庭，你认识几个？</li><li style="margin:6px 0;font-size:16px;line-height:1.8;color:#1A1A1A;">"老祖宗的东西流传千年，一定有道理" → 那些没流传下来的东西，是因为没道理，还是因为运气不好？</li></ul>
+<hr style="margin:28px 0;border:none;border-top:1px solid #E5E5E5;">
+<h2 style="margin:28px 0 14px;font-size:19px;line-height:1.5;font-weight:bold;color:#1A1A1A;">这招叫什么</h2>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">这一关的招式叫<strong style="font-weight:bold;">看不见的样本</strong>。</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">它只有一句提醒：</p>
+<blockquote style="margin:0 0 16px;padding:8px 16px;font-size:15px;line-height:1.8;color:#646464;border-left:3px solid #D3D3D3;"><p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">你手上的数据，是被筛选过的。筛选的规则，就是结论真正的来源。</p></blockquote>
+<hr style="margin:28px 0;border:none;border-top:1px solid #E5E5E5;">
+<h2 style="margin:28px 0 14px;font-size:19px;line-height:1.5;font-weight:bold;color:#1A1A1A;">现实运用：看不见的样本，现实里能不能用？</h2>
+<blockquote style="margin:0 0 16px;padding:8px 16px;font-size:15px;line-height:1.8;color:#646464;border-left:3px solid #D3D3D3;"><p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">看不见的样本：没回来的那些，才是关键。 现实中，这个动作怎么用？</p></blockquote>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">用来给"成功案例"降噪。</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">先破除一个误解：不是所有成功案例都没用。看别人怎么做成的，是有价值的。但这个价值在于"学方法"，不在于"算概率"。你想知道"我照着做能不能成"，那需要的是分母，不是分子。</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">能用的是这个动作：</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;"><strong style="font-weight:bold;">听到一个成功故事，先问："做同样的事、但失败了的人，有多少？"</strong></p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">三个场景：</p>
+<ul style="margin:0 0 16px;padding-left:24px;"><li style="margin:6px 0;font-size:16px;line-height:1.8;color:#1A1A1A;">成功学：一本书讲了 20 个白手起家的故事。看着热血。但写书的人不会去采访那 2000 个做了同样的事、赔光的人——不是他坏，是那些人不买书。所以这本书教你的，是"活下来的人做了什么"，不是"做什么能活下来"。这两件事差得非常远。</li><li style="margin:6px 0;font-size:16px;line-height:1.8;color:#1A1A1A;">老字号："这家店开了 100 年，说明东西好。" 也可能是：这条街上曾经有 50 家店，49 家倒了，只剩这一家。"活下来"和"好"之间有相关性，但不是等号。你要判断的是：它活下来，靠的是产品，还是铺面是自己的、没房租压力？</li><li style="margin:6px 0;font-size:16px;line-height:1.8;color:#1A1A1A;">职场建议："我当年就是这么跳槽的，你也这么干。" 说这话的人，是跳成功了的那个。那些同样跳了、结果踩空的人，不会来给你建议。所以这类建议的真实含义是："这条路有人走通了"，而不是"这条路能走通"。</li></ul>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">一句话总结：样本里没有的，比样本里有的更关键。</p>
+<hr style="margin:28px 0;border:none;border-top:1px solid #E5E5E5;">
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">留个思考题：你最近信过的一个"成功案例"，如果去数一数失败的那些，结论会变吗？</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">关注「像玩游戏一样学」，练脑子不费劲。作者懒，不定期更新哟！</p>

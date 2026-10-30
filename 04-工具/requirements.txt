@@ -1,0 +1,12 @@
+# 04-工具 的依赖
+#
+# Python 侧：全部脚本只用标准库（os / re / json / subprocess / ctypes 等），
+#            不需要 pip install 任何东西。需要 Python 3.10+。
+# Node 侧： 发布脚本依赖 playwright-core（不是 playwright 全家桶）：
+#
+#   npm i playwright-core
+#
+#   如果本机已经有 Playwright，也可以用环境变量指过去，避免重复下载：
+#   PLAYWRIGHT_CORE=/path/to/playwright-core
+#
+#   浏览器用系统安装的 Chrome（channel: 'chrome'），不额外下载 Chromium。

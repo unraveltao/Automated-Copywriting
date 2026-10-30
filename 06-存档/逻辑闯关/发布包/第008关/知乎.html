@@ -1,0 +1,56 @@
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">这道题我建议你先猜一个数，猜完再看答案。因为几乎所有人都会猜错，而且错得非常离谱。</p>
+<blockquote style="margin:0 0 16px;padding:8px 16px;font-size:15px;line-height:1.8;color:#646464;border-left:3px solid #D3D3D3;"><p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">本关只需要知道一年按 365 天算，生日均匀分布。不需要读过前几关。</p></blockquote>
+<hr style="margin:28px 0;border:none;border-top:1px solid #E5E5E5;">
+<h2 style="margin:28px 0 14px;font-size:19px;line-height:1.5;font-weight:bold;color:#1A1A1A;">规则设定</h2>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">一个房间里有一群人，每个人的生日随机分布在一年的 365 天里。</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">问的是：至少有两个人生日相同的概率。</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">注意，不是"有人和你同一天"，是"随便哪两个人同一天"。</p>
+<hr style="margin:28px 0;border:none;border-top:1px solid #E5E5E5;">
+<h2 style="margin:28px 0 14px;font-size:19px;line-height:1.5;font-weight:bold;color:#1A1A1A;">题一 · 23 个人</h2>
+<h3 style="margin:22px 0 12px;font-size:17px;line-height:1.5;font-weight:bold;color:#1A1A1A;">题目</h3>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">房间里 23 个人。</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">问：至少两人生日相同的概率是多少？超过一半，还是不到一半？</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">（先猜。大多数人会猜 5% 到 10%。）</p>
+<h3 style="margin:22px 0 12px;font-size:17px;line-height:1.5;font-weight:bold;color:#1A1A1A;">答案</h3>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;"><strong style="font-weight:bold;">超过一半。约 50.7%。</strong></p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">只有 23 个人，就有一半以上的概率撞上。</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">算法是这样的：直接算"至少一对相同"很麻烦，所以反过来算"所有人都不一样"，再用 1 减掉。</p>
+<ul style="margin:0 0 16px;padding-left:24px;"><li style="margin:6px 0;font-size:16px;line-height:1.8;color:#1A1A1A;">第 1 个人，随便哪天，365/365</li><li style="margin:6px 0;font-size:16px;line-height:1.8;color:#1A1A1A;">第 2 个人，不能和第 1 个同天，364/365</li><li style="margin:6px 0;font-size:16px;line-height:1.8;color:#1A1A1A;">第 3 个人，不能和前两个同天，363/365</li><li style="margin:6px 0;font-size:16px;line-height:1.8;color:#1A1A1A;">……</li><li style="margin:6px 0;font-size:16px;line-height:1.8;color:#1A1A1A;">第 23 个人，不能和前 22 个同天，343/365</li></ul>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">把这些乘起来，是"23 个人全不同"的概率，约等于 0.493。</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">所以至少一对相同的概率 = 1 − 0.493 约等于 <strong style="font-weight:bold;">50.7%</strong>。</p>
+<hr style="margin:28px 0;border:none;border-top:1px solid #E5E5E5;">
+<h3 style="margin:22px 0 12px;font-size:17px;line-height:1.5;font-weight:bold;color:#1A1A1A;">为什么直觉错得这么厉害</h3>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">因为你算的是"人头"，题目问的是"配对"。</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">23 个人，你脑子里想的是 23 个数字，感觉上要撞上得靠运气。</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">但实际上，任意两个人都可能撞。23 个人里有多少对？</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">23 × 22 ÷ 2 = 253 对。</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">不是 23 次机会，是 253 次机会。</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">每一对撞上的概率是 1/365，听起来很小。但你有 253 对，253 ÷ 365 已经超过一半了。粗略一算，就能看出 50% 这个量级是对的。</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">这就是<strong style="font-weight:bold;">配对思维</strong>：概率不按人头算，按配对数算。n 个人，产生 n(n−1)/2 对。人数涨一点，配对数涨得快得多。</p>
+<hr style="margin:28px 0;border:none;border-top:1px solid #E5E5E5;">
+<h2 style="margin:28px 0 14px;font-size:19px;line-height:1.5;font-weight:bold;color:#1A1A1A;">题二 · 换个问法</h2>
+<h3 style="margin:22px 0 12px;font-size:17px;line-height:1.5;font-weight:bold;color:#1A1A1A;">题目</h3>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">现在把问题改一下，改成大多数人以为的原题：</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">要有多大的概率（50%），才能保证"有人和你同一天生日"？需要多少人？</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">（这题和上一题看起来几乎一样。答案差了一个数量级。）</p>
+<h3 style="margin:22px 0 12px;font-size:17px;line-height:1.5;font-weight:bold;color:#1A1A1A;">答案</h3>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;"><strong style="font-weight:bold;">253 个人，加上你，一共 254 人。</strong></p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">差多少？23 对 254。十一倍。</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">为什么差这么多？因为"和你比"只有 n−1 次机会，而"任意两人比"有 n(n−1)/2 次机会。</p>
+<ul style="margin:0 0 16px;padding-left:24px;"><li style="margin:6px 0;font-size:16px;line-height:1.8;color:#1A1A1A;">题一：23 个人，253 对，够用了</li><li style="margin:6px 0;font-size:16px;line-height:1.8;color:#1A1A1A;">题二：254 个人，253 次"和你比"的机会，才够用</li></ul>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">同样是 253 次比较，一个只要 23 个人，一个要 254 个人。<strong style="font-weight:bold;">因为题一里每个人都在和所有人比，题二里所有人只和你一个人比。</strong></p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">算一下题二：253 个"别人"里，没有一个和你同生日的概率是 (364/365)²⁵³，约等于 0.4996。所以至少一个和你同生日，约 50.04%。</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">刚刚过线。</p>
+<hr style="margin:28px 0;border:none;border-top:1px solid #E5E5E5;">
+<h2 style="margin:28px 0 14px;font-size:19px;line-height:1.5;font-weight:bold;color:#1A1A1A;">现实运用：配对思维，现实里能不能用？</h2>
+<blockquote style="margin:0 0 16px;padding:8px 16px;font-size:15px;line-height:1.8;color:#646464;border-left:3px solid #D3D3D3;"><p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">生日悖论：23 个人就有一半概率撞生日。 现实中，这个道理能用来干什么？</p></blockquote>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">能用来解释一件让很多人困惑的事：为什么"巧合"总在发生。</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">先破除一个误解：巧合本身不神秘，神秘的是我们对它的解读。人天生会给巧合赋予意义——缘分、预兆、阴谋。但在赋义之前，有个数该先算。</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;"><strong style="font-weight:bold;">遇到"太巧了"，先算一下：一共有多少种"巧"的可能？</strong></p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">三个场景：</p>
+<ul style="margin:0 0 16px;padding-left:24px;"><li style="margin:6px 0;font-size:16px;line-height:1.8;color:#1A1A1A;"><strong style="font-weight:bold;">"我在国外遇到老乡，太巧了"</strong>：你一辈子见过几万人，产生的是几亿对"可能的相遇"。在几亿对里撞上一对，概率再低也会发生。不是缘分，是分母大。</li><li style="margin:6px 0;font-size:16px;line-height:1.8;color:#1A1A1A;"><strong style="font-weight:bold;">"这两件事同时发生，一定有联系"</strong>：先问一句，世界上每天有多少件事在同时发生？如果有十亿种"同时发生"的组合，那么每天有几百万组"惊人巧合"是必然的。你只是恰好注意到了其中一组。</li><li style="margin:6px 0;font-size:16px;line-height:1.8;color:#1A1A1A;"><strong style="font-weight:bold;">"这个用户行为太规律了，肯定是机器人"</strong>：如果有 100 万个用户，总会有几个碰巧行为规律的真人。先算人数，再下结论。</li></ul>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">第三条特别值得记住。数据分析里最常见的错误，就是在一百万个样本里挑出最异常的那几个，然后说"看，这不正常"。在一百万个样本里，一定有几个不正常。</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">一句话总结：<strong style="font-weight:bold;">巧不巧，不取决于事件本身，取决于你有多少次机会撞上它。</strong></p>
+<hr style="margin:28px 0;border:none;border-top:1px solid #E5E5E5;">
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">留个思考题：你经历过最巧的一件事是什么？如果认真算一下"一共有多少种巧法"，你还觉得巧吗？</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.8;color:#1A1A1A;">关注「像玩游戏一样学」，练脑子不费劲。作者懒，不定期更新哟！</p>

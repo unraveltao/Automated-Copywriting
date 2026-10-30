@@ -31,7 +31,7 @@
 
 | 项 | 值 |
 |---|---|
-| Python | `C:/Users/iron tom/.workbuddy-ai/binaries/python/versions/3.13.12/python.exe` |
+| Python | 任意 3.10+ 的 `python`（本机路径因人而异，脚本不依赖绝对路径） |
 | Node | `node`（已在 PATH） |
 | 工作目录 | 所有命令的 `cwd` 都是 `04-工具/` |
 | 平台 | **四个平台一条队列**：今日头条 / 公众号 / 知乎 / 小红书 |
